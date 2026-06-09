@@ -1,0 +1,12 @@
+{
+  "name": "text-ani",
+  "version": "1.0.0",
+  "description": "Animate text in the browser and export to ProRes 4444 with alpha",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

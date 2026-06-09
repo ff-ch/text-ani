@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>text-ani — animate &amp; export to ProRes 4444</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link id="gfonts" rel="stylesheet" href="" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>text-ani</h1>
+      <p class="sub">Animate text → export ProRes 4444 (alpha)</p>
+
+      <!-- ---------------- Layers ---------------- -->
+      <details open class="section">
+        <summary>Layers</summary>
+        <div id="layerList" class="layer-list"></div>
+        <div class="layer-actions">
+          <button id="addLayer" title="Add layer">＋</button>
+          <button id="dupLayer" title="Duplicate">⧉</button>
+          <button id="delLayer" title="Delete">🗑</button>
+          <button id="layerUp" title="Move up">↑</button>
+          <button id="layerDown" title="Move down">↓</button>
+        </div>
+      </details>
+
+      <!-- ---------------- Selected layer: text & font ---------------- -->
+      <details open class="section">
+        <summary>Text &amp; Font</summary>
+        <label class="field">
+          <span>Text</span>
+          <textarea id="text" rows="2">Hello</textarea>
+        </label>
+        <label class="field">
+          <span>Font</span>
+          <div class="font-picker" id="fontPicker">
+            <button type="button" id="fontPickerBtn" class="fp-btn">
+              <span id="fontPickerLabel">Helvetica</span><span class="fp-caret">▾</span>
+            </button>
+            <div id="fontPickerMenu" class="fp-menu" hidden></div>
+          </div>
+          <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2,font/*" hidden />
+        </label>
+        <div class="row">
+          <label class="field narrow">
+            <span>Weight</span>
+            <select id="fontWeight">
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="700" selected>Bold</option>
+              <option value="900">Black</option>
+            </select>
+          </label>
+          <label class="field narrow">
+            <span>Color</span>
+            <input type="color" id="color" value="#ffffff" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Size <i id="fontSizeVal">120</i> px</span>
+          <input type="range" id="fontSize" min="8" max="500" value="120" />
+        </label>
+        <label class="field">
+          <span>Tracking <i id="trackingVal">0</i> px</span>
+          <input type="range" id="tracking" min="-20" max="80" step="0.5" value="0" />
+        </label>
+        <label class="field">
+          <span>Word spacing <i id="wordSpacingVal">0</i> px</span>
+          <input type="range" id="wordSpacing" min="-20" max="120" step="1" value="0" />
+        </label>
+        <label class="field">
+          <span>Line height <i id="lineHeightVal">1.10</i></span>
+          <input type="range" id="lineHeight" min="0.6" max="2.5" step="0.05" value="1.1" />
+        </label>
+        <div class="row">
+          <label class="field">
+            <span>Position X <i id="posXVal">0</i>%</span>
+            <input type="range" id="posX" min="-50" max="50" value="0" />
+          </label>
+          <label class="field">
+            <span>Position Y <i id="posYVal">0</i>%</span>
+            <input type="range" id="posY" min="-50" max="50" value="0" />
+          </label>
+        </div>
+      </details>
+
+      <!-- ---------------- Selected layer: animation ---------------- -->
+      <details open class="section">
+        <summary>Animation</summary>
+        <div class="row">
+          <label class="field">
+            <span>Style</span>
+            <select id="style">
+              <option value="fade">Fade</option>
+              <option value="slideUp">Slide Up</option>
+              <option value="slideDown">Slide Down</option>
+              <option value="slideLeft">Slide Left</option>
+              <option value="slideRight">Slide Right</option>
+              <option value="pop">Pop</option>
+              <option value="zoomIn">Zoom In</option>
+              <option value="zoomOut">Zoom Out</option>
+            </select>
+          </label>
+          <label class="field narrow">
+            <span>By</span>
+            <select id="unit">
+              <option value="whole">All text</option>
+              <option value="line">Line</option>
+              <option value="word">Word</option>
+              <option value="letter">Letter</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Stagger <i id="staggerVal">0.50</i></span>
+          <input type="range" id="stagger" min="0" max="0.95" step="0.01" value="0.5" />
+        </label>
+        <label class="field">
+          <span>Easing <i id="easingVal">3.0</i></span>
+          <input type="range" id="easing" min="1" max="6" step="0.1" value="3" />
+        </label>
+        <div class="row">
+          <label class="field narrow">
+            <span>In (s)</span>
+            <input type="number" id="inDur" min="0" max="20" step="0.1" value="0.8" />
+          </label>
+          <label class="field narrow">
+            <span>Out (s)</span>
+            <input type="number" id="outDur" min="0" max="20" step="0.1" value="0.6" />
+          </label>
+        </div>
+      </details>
+
+      <!-- ---------------- Selected layer: drop shadow ---------------- -->
+      <details class="section">
+        <summary>Drop Shadow</summary>
+        <label class="check"><input type="checkbox" id="shEnabled" /> Enable drop shadow</label>
+        <div class="row">
+          <label class="field">
+            <span>Distance <i id="shDistanceVal">8</i> px</span>
+            <input type="range" id="shDistance" min="0" max="200" value="8" />
+          </label>
+          <label class="field narrow">
+            <span>Color</span>
+            <input type="color" id="shColor" value="#000000" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Angle <i id="shAngleVal">45</i>°</span>
+          <input type="range" id="shAngle" min="0" max="360" value="45" />
+        </label>
+        <label class="field">
+          <span>Blur <i id="shBlurVal">8</i> px</span>
+          <input type="range" id="shBlur" min="0" max="200" value="8" />
+        </label>
+        <label class="field">
+          <span>Opacity <i id="shOpacityVal">0.50</i></span>
+          <input type="range" id="shOpacity" min="0" max="1" step="0.01" value="0.5" />
+        </label>
+      </details>
+
+      <!-- ---------------- Project (global) ---------------- -->
+      <details class="section">
+        <summary>Project &amp; Output</summary>
+        <label class="field">
+          <span>Canvas</span>
+          <select id="sizePreset">
+            <optgroup label="16:9 Landscape">
+              <option value="1920x1080">1920 × 1080 — HD</option>
+              <option value="3840x2160">3840 × 2160 — 4K</option>
+            </optgroup>
+            <optgroup label="1:1 Square">
+              <option value="1080x1080">1080 × 1080 — 1080p</option>
+              <option value="2160x2160">2160 × 2160 — 4K</option>
+            </optgroup>
+            <optgroup label="4:5 Portrait">
+              <option value="1080x1350">1080 × 1350 — 1080p</option>
+              <option value="2160x2700">2160 × 2700 — 4K</option>
+            </optgroup>
+            <optgroup label="9:16 Vertical">
+              <option value="1080x1920">1080 × 1920 — 1080p</option>
+              <option value="2160x3840">2160 × 3840 — 4K</option>
+            </optgroup>
+            <option value="custom">Custom…</option>
+          </select>
+        </label>
+        <div class="row" id="customSizeRow" hidden>
+          <label class="field"><span>Width</span><input type="number" id="canvasW" value="1920" /></label>
+          <label class="field"><span>Height</span><input type="number" id="canvasH" value="1080" /></label>
+        </div>
+        <div class="row">
+          <label class="field narrow">
+            <span>Duration (s)</span>
+            <input type="number" id="duration" min="0.5" max="120" step="0.5" value="3" />
+          </label>
+          <label class="field narrow">
+            <span>FPS</span>
+            <select id="fps"><option>24</option><option selected>25</option><option>30</option><option>50</option><option>60</option></select>
+          </label>
+        </div>
+      </details>
+
+      <!-- ---------------- Motion blur ---------------- -->
+      <details class="section">
+        <summary>Motion Blur</summary>
+        <label class="check"><input type="checkbox" id="mbEnabled" /> Enable motion blur</label>
+        <label class="field">
+          <span>Samples <i id="mbSamplesVal">8</i></span>
+          <input type="range" id="mbSamples" min="2" max="32" value="8" />
+        </label>
+        <label class="field">
+          <span>Shutter <i id="mbShutterVal">0.5</i></span>
+          <input type="range" id="mbShutter" min="0.1" max="2" step="0.05" value="0.5" />
+        </label>
+        <label class="check"><input type="checkbox" id="mbPreview" /> Show in live playback</label>
+        <p class="hint">Always applied to static frames &amp; the export. Showing it during live playback is heavier — turn it on to preview, off for smooth scrubbing.</p>
+      </details>
+
+      <!-- ---------------- Background reference ---------------- -->
+      <details class="section">
+        <summary>Reference Background</summary>
+        <input type="file" id="bgFile" accept="image/*" />
+        <button id="clearBg" class="ghost">Clear background</button>
+        <p class="hint">Preview only — never baked into the exported alpha.</p>
+      </details>
+
+      <!-- ---------------- Presets ---------------- -->
+      <details class="section">
+        <summary>Presets</summary>
+        <div class="row">
+          <input type="text" id="presetName" placeholder="Preset name" />
+          <button id="savePreset">Save</button>
+        </div>
+        <div class="row">
+          <select id="presetList"><option value="">— saved presets —</option></select>
+          <button id="loadPreset">Load</button>
+          <button id="delPreset" class="ghost">✕</button>
+        </div>
+        <div class="row">
+          <button id="exportPreset" class="ghost">Export .json</button>
+          <button id="importPreset" class="ghost">Import .json</button>
+          <input type="file" id="importPresetFile" accept="application/json" hidden />
+        </div>
+      </details>
+
+      <button id="exportBtn" class="export">Export ProRes 4444 .mov</button>
+      <div id="progress" class="progress" hidden>
+        <div class="bar"><div id="barFill"></div></div>
+        <span id="progressLabel">Rendering…</span>
+        <button id="cancelBtn" class="cancel" hidden>Cancel render</button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="transport">
+        <button id="playBtn">▶</button>
+        <input type="range" id="scrub" min="0" max="1000" value="0" />
+        <span id="timeLabel" class="time">0.00s</span>
+        <label class="checker-toggle"><input type="checkbox" id="checker" checked /> transparency grid</label>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
