@@ -120,6 +120,8 @@ function newLayer(text = "Hello") {
     easing: 3,
     inDur: 0.8,
     outDur: 0.6,
+    rollDur: 0.5,
+    rollHold: 1,
     shadow: { ...DEFAULT_SHADOW },
   };
 }
@@ -133,8 +135,8 @@ let project = {
 };
 
 const LAYER_FIELDS = ["text","fontFamily","fontWeight","fontSize","color","tracking",
-  "wordSpacing","lineHeight","posX","posY","style","unit","stagger","easing","inDur","outDur"];
-const NUMERIC = new Set(["fontSize","tracking","wordSpacing","lineHeight","posX","posY","stagger","easing","inDur","outDur"]);
+  "wordSpacing","lineHeight","posX","posY","style","unit","stagger","easing","inDur","outDur","rollDur","rollHold"];
+const NUMERIC = new Set(["fontSize","tracking","wordSpacing","lineHeight","posX","posY","stagger","easing","inDur","outDur","rollDur","rollHold"]);
 
 const curLayer = () => project.layers[project.selected];
 
@@ -233,6 +235,36 @@ function styleTransform(style, p, fontSize) {
   }
 }
 
+// "Roll" — slot-machine reel. All lines share a one-line window (clipped to
+// line height) at the layer position. The reel position u is the line index
+// currently centred in the window: it advances one notch per roll (eased) and
+// parks during holds, running -1 (line 0 just below the window) → lineCount
+// (last line rolled out the top).
+function drawRollLayer(c, layer, t, lay) {
+  const lineCount = layer.text.split("\n").length;
+  const lineH = layer.fontSize * layer.lineHeight;
+  const cy = project.height / 2 + (layer.posY / 100) * project.height;
+  const rollDur = Math.max(0.05, +layer.rollDur || 0.5);
+  const cycle = rollDur + Math.max(0, +layer.rollHold || 0);
+
+  const k = Math.min(Math.floor(t / cycle), lineCount); // which roll/hold we're in
+  const tk = t - k * cycle;
+  const u = tk < rollDur ? k - 1 + easeK(clamp(tk / rollDur), layer.easing) : k;
+  if (u <= -1 || u >= lineCount) return;
+
+  c.save();
+  c.beginPath();
+  c.rect(0, cy - lineH / 2, project.width, lineH);
+  c.clip();
+  for (const g of lay.glyphs) {
+    if (!g.draw) continue;
+    const off = (g.line - u) * lineH;
+    if (Math.abs(off) >= lineH) continue;
+    c.fillText(g.ch, g.x, cy + off);
+  }
+  c.restore();
+}
+
 function drawLayer(c, layer, t) {
   if (!layer.visible) return;
   const lay = layoutLayer(layer);
@@ -252,6 +284,14 @@ function drawLayer(c, layer, t) {
     c.shadowOffsetY = sh.distance * Math.sin(rad);
   } else {
     c.shadowColor = "rgba(0,0,0,0)"; c.shadowBlur = 0; c.shadowOffsetX = 0; c.shadowOffsetY = 0;
+  }
+
+  // Roll runs its own per-line in/hold/out timeline, so it skips the
+  // style×unit×stagger pipeline and the exit fade (its last roll is the exit).
+  if (layer.style === "roll") {
+    drawRollLayer(c, layer, t, lay);
+    c.shadowColor = "rgba(0,0,0,0)"; c.shadowBlur = 0; c.shadowOffsetX = 0; c.shadowOffsetY = 0;
+    return;
   }
 
   // Exit fade over the last outDur seconds.
@@ -409,6 +449,20 @@ function updateValueLabels() {
   $("shAngleVal").textContent = sh.angle;
   $("shBlurVal").textContent = sh.blur;
   $("shOpacityVal").textContent = (+sh.opacity).toFixed(2);
+
+  // Roll swaps the stagger/unit/in-out controls for its own timing fields.
+  const isRoll = L.style === "roll";
+  $("unitField").hidden = isRoll;
+  $("staggerField").hidden = isRoll;
+  $("inOutRow").hidden = isRoll;
+  $("rollOpts").hidden = !isRoll;
+  if (isRoll) {
+    const n = L.text.split("\n").length;
+    const roll = +L.rollDur || 0.5, hold = Math.max(0, +L.rollHold || 0);
+    const total = n * (roll + hold) + roll;
+    $("rollHint").textContent =
+      `${n} line${n === 1 ? "" : "s"} → ${total.toFixed(1)}s total (set Duration ≥ ${total.toFixed(1)}s to see every roll).`;
+  }
 }
 
 // Layer-field controls (fontFamily is handled by the custom font picker below)
@@ -599,6 +653,7 @@ function hydrate(p) {
   const incomingFonts = p.customFonts; delete p.customFonts;
   project = p; project.selected = 0;
   if (!project.motionBlur) project.motionBlur = { enabled: false, samples: 8, shutter: 0.5 };
+  project.layers.forEach((l) => { if (l.rollDur == null) l.rollDur = 0.5; if (l.rollHold == null) l.rollHold = 1; });
   mergeCustomFonts(incomingFonts);
   invalidateLayouts(); applySize(); applyBg(); syncControlsFromState(); renderLayerList();
   Promise.all(project.layers.map(ensureFont)).then(render);

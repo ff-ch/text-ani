@@ -103,9 +103,10 @@
               <option value="pop">Pop</option>
               <option value="zoomIn">Zoom In</option>
               <option value="zoomOut">Zoom Out</option>
+              <option value="roll">Roll (slot reel)</option>
             </select>
           </label>
-          <label class="field narrow">
+          <label class="field narrow" id="unitField">
             <span>By</span>
             <select id="unit">
               <option value="whole">All text</option>
@@ -115,7 +116,20 @@
             </select>
           </label>
         </div>
-        <label class="field">
+        <div id="rollOpts" hidden>
+          <div class="row">
+            <label class="field narrow">
+              <span>Roll (s)</span>
+              <input type="number" id="rollDur" min="0.05" max="10" step="0.05" value="0.5" />
+            </label>
+            <label class="field narrow">
+              <span>Hold (s)</span>
+              <input type="number" id="rollHold" min="0" max="60" step="0.1" value="1" />
+            </label>
+          </div>
+          <p class="hint" id="rollHint"></p>
+        </div>
+        <label class="field" id="staggerField">
           <span>Stagger <i id="staggerVal">0.50</i></span>
           <input type="range" id="stagger" min="0" max="0.95" step="0.01" value="0.5" />
         </label>
@@ -123,7 +137,7 @@
           <span>Easing <i id="easingVal">3.0</i></span>
           <input type="range" id="easing" min="1" max="6" step="0.1" value="3" />
         </label>
-        <div class="row">
+        <div class="row" id="inOutRow">
           <label class="field narrow">
             <span>In (s)</span>
             <input type="number" id="inDur" min="0" max="20" step="0.1" value="0.8" />
