@@ -122,6 +122,7 @@ function newLayer(text = "Hello") {
     outDur: 0.6,
     rollDur: 0.5,
     rollHold: 1,
+    rollLines: 1,
     shadow: { ...DEFAULT_SHADOW },
   };
 }
@@ -135,8 +136,8 @@ let project = {
 };
 
 const LAYER_FIELDS = ["text","fontFamily","fontWeight","fontSize","color","tracking",
-  "wordSpacing","lineHeight","posX","posY","style","unit","stagger","easing","inDur","outDur","rollDur","rollHold"];
-const NUMERIC = new Set(["fontSize","tracking","wordSpacing","lineHeight","posX","posY","stagger","easing","inDur","outDur","rollDur","rollHold"]);
+  "wordSpacing","lineHeight","posX","posY","style","unit","stagger","easing","inDur","outDur","rollDur","rollHold","rollLines"];
+const NUMERIC = new Set(["fontSize","tracking","wordSpacing","lineHeight","posX","posY","stagger","easing","inDur","outDur","rollDur","rollHold","rollLines"]);
 
 const curLayer = () => project.layers[project.selected];
 
@@ -235,31 +236,40 @@ function styleTransform(style, p, fontSize) {
   }
 }
 
-// "Roll" — slot-machine reel. All lines share a one-line window (clipped to
-// line height) at the layer position. The reel position u is the line index
-// currently centred in the window: it advances one notch per roll (eased) and
-// parks during holds, running -1 (line 0 just below the window) → lineCount
-// (last line rolled out the top).
+// "Roll" — slot-machine reel. Lines share a window (clipped to N line heights,
+// where N = rollLines lines per turn) at the layer position. Each turn advances
+// the reel by one block of N lines: the window shows lines [b·N … b·N+N-1] for
+// block b. The reel position u is the (fractional) line index centred in the
+// window; it advances N notches per roll (eased) and parks during holds,
+// running from one block below the window → the last block rolled out the top.
 function drawRollLayer(c, layer, t, lay) {
   const lineCount = layer.text.split("\n").length;
+  const perTurn = Math.max(1, Math.min(3, Math.round(+layer.rollLines || 1)));
+  const blocks = Math.ceil(lineCount / perTurn);
   const lineH = layer.fontSize * layer.lineHeight;
+  const winH = perTurn * lineH;                       // window is N lines tall
   const cy = project.height / 2 + (layer.posY / 100) * project.height;
   const rollDur = Math.max(0.05, +layer.rollDur || 0.5);
   const cycle = rollDur + Math.max(0, +layer.rollHold || 0);
 
-  const k = Math.min(Math.floor(t / cycle), lineCount); // which roll/hold we're in
+  // Park centre of block b (line index centred in the window). Blocks are
+  // evenly spaced by perTurn, so park(k) = k·perTurn + (perTurn−1)/2.
+  const park = (k) => k * perTurn + (perTurn - 1) / 2;
+  const k = Math.min(Math.floor(t / cycle), blocks); // which roll/hold we're in
   const tk = t - k * cycle;
-  const u = tk < rollDur ? k - 1 + easeK(clamp(tk / rollDur), layer.easing) : k;
-  if (u <= -1 || u >= lineCount) return;
+  const u = tk < rollDur
+    ? park(k - 1) + easeK(clamp(tk / rollDur), layer.easing) * perTurn
+    : park(k);
+  if (u <= park(-1) || u >= park(blocks)) return;
 
   c.save();
   c.beginPath();
-  c.rect(0, cy - lineH / 2, project.width, lineH);
+  c.rect(0, cy - winH / 2, project.width, winH);
   c.clip();
   for (const g of lay.glyphs) {
     if (!g.draw) continue;
     const off = (g.line - u) * lineH;
-    if (Math.abs(off) >= lineH) continue;
+    if (Math.abs(off) >= (perTurn + 1) * lineH / 2) continue;
     c.fillText(g.ch, g.x, cy + off);
   }
   c.restore();
@@ -458,10 +468,12 @@ function updateValueLabels() {
   $("rollOpts").hidden = !isRoll;
   if (isRoll) {
     const n = L.text.split("\n").length;
+    const perTurn = Math.max(1, Math.min(3, Math.round(+L.rollLines || 1)));
+    const turns = Math.ceil(n / perTurn);
     const roll = +L.rollDur || 0.5, hold = Math.max(0, +L.rollHold || 0);
-    const total = n * (roll + hold) + roll;
+    const total = turns * (roll + hold) + roll;
     $("rollHint").textContent =
-      `${n} line${n === 1 ? "" : "s"} → ${total.toFixed(1)}s total (set Duration ≥ ${total.toFixed(1)}s to see every roll).`;
+      `${n} line${n === 1 ? "" : "s"} → ${turns} turn${turns === 1 ? "" : "s"} × ${perTurn} line${perTurn === 1 ? "" : "s"} → ${total.toFixed(1)}s total (set Duration ≥ ${total.toFixed(1)}s to see every roll).`;
   }
 }
 
@@ -653,7 +665,7 @@ function hydrate(p) {
   const incomingFonts = p.customFonts; delete p.customFonts;
   project = p; project.selected = 0;
   if (!project.motionBlur) project.motionBlur = { enabled: false, samples: 8, shutter: 0.5 };
-  project.layers.forEach((l) => { if (l.rollDur == null) l.rollDur = 0.5; if (l.rollHold == null) l.rollHold = 1; });
+  project.layers.forEach((l) => { if (l.rollDur == null) l.rollDur = 0.5; if (l.rollHold == null) l.rollHold = 1; if (l.rollLines == null) l.rollLines = 1; });
   mergeCustomFonts(incomingFonts);
   invalidateLayouts(); applySize(); applyBg(); syncControlsFromState(); renderLayerList();
   Promise.all(project.layers.map(ensureFont)).then(render);
