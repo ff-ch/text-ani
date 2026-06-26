@@ -21,7 +21,9 @@ app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/export/start", async (req, res) => {
   const { width, height, fps = 25 } = req.body || {};
-  if (!width || !height) return res.status(400).json({ error: "missing dimensions" });
+  const intInRange = (n, lo, hi) => Number.isInteger(n) && n >= lo && n <= hi;
+  if (!intInRange(width, 1, 8192) || !intInRange(height, 1, 8192) || !intInRange(fps, 1, 120))
+    return res.status(400).json({ error: "invalid width/height/fps" });
 
   const dir = await mkdtemp(join(tmpdir(), "text-ani-"));
   const out = join(dir, "output.mov");
@@ -99,6 +101,8 @@ app.post("/api/export/cancel", async (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(PORT, () => {
+// Bind to loopback only — this tool's only client is the local browser, so there
+// is no reason to expose the ffmpeg/export API to other machines on the network.
+app.listen(PORT, "127.0.0.1", () => {
   console.log(`\n  text-ani running →  http://localhost:${PORT}\n`);
 });

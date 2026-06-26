@@ -47,7 +47,13 @@ const FONTS = [
 const FKEY = "text-ani-fonts";
 let customFonts = [];  // { family, label, css, data(dataURL) }
 
+// Only ever load font/background data from inline data: URLs. An imported preset
+// shared by someone else could otherwise smuggle a remote url() in here, making
+// the browser fetch (and beacon to) an attacker's server when the preset opens.
+const isDataUrl = (v) => typeof v === "string" && /^data:/i.test(v);
+
 function registerFontFace(c) {
+  if (!isDataUrl(c.data)) return;
   try {
     const ff = new FontFace(c.family, `url(${c.data})`);
     ff.load().then(() => document.fonts.add(ff)).then(() => { invalidateLayouts(); render(); }).catch(() => {});
@@ -67,7 +73,7 @@ function loadStoredFonts() {
 function mergeCustomFonts(incoming) {
   if (!Array.isArray(incoming)) return;
   for (const c of incoming) {
-    if (!c || !c.family || !c.data) continue;
+    if (!c || !c.family || !isDataUrl(c.data)) continue;
     if (!customFonts.some((x) => x.family === c.family)) { customFonts.unshift(c); registerFontFace(c); }
   }
   persistCustomFonts();
@@ -632,7 +638,7 @@ $("fontFile").addEventListener("change", (e) => {
 // ---------------------------------------------------------------------------
 const wrap = $("canvasWrap");
 function applyBg() {
-  if (project.bgImage) { wrap.style.setProperty("--bg-img", `url(${project.bgImage})`); wrap.classList.add("has-bg"); }
+  if (isDataUrl(project.bgImage)) { wrap.style.setProperty("--bg-img", `url(${project.bgImage})`); wrap.classList.add("has-bg"); }
   else { wrap.classList.remove("has-bg"); }
 }
 $("bgFile").addEventListener("change", (e) => {
