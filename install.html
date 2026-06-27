@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install text-ani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #2c3e8f;            /* brand blue */
+    --text: #ffffff;
+    --dim: rgba(255,255,255,0.58);
+    --line: rgba(255,255,255,0.18);
+    --ease: cubic-bezier(0.4,0,0.2,1);
+  }
+  html, body { min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 15px; font-weight: 400; line-height: 1.6;
+    padding: 30px 24px 64px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; position: relative; }
+
+  /* LOGO — top right, small (the site renders it top-left and larger) */
+  .logo-area { position: absolute; top: 2px; right: 0; line-height: 0; }
+  #logo-canvas { image-rendering: pixelated; height: auto; display: block;
+                 opacity: 0; animation: fadeIn .8s var(--ease) .2s forwards; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  header { padding-top: 4px; margin-bottom: 28px; max-width: calc(100% - 190px); }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: 1px; }
+  .sub { color: var(--dim); font-size: 14px; margin-top: 6px; }
+
+  h2 { font-size: 14px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+       margin: 34px 0 12px; }
+  p { margin-bottom: 12px; }
+  .dim { color: var(--dim); }
+  strong { font-weight: 700; }
+  code { font-family: 'Source Code Pro', monospace; }
+
+  /* COMMAND BOX */
+  .cmd { display: flex; align-items: stretch; border: 1px solid var(--line);
+         border-radius: 4px; background: rgba(0,0,0,0.22); overflow: hidden; margin: 10px 0; }
+  .cmd code { flex: 1; padding: 14px 16px; font-size: 13.5px; white-space: pre-wrap;
+              word-break: break-all; }
+  .cmd button { border: none; border-left: 1px solid var(--line);
+                background: rgba(255,255,255,0.06); color: #fff; font-family: inherit;
+                font-size: 13px; padding: 0 18px; cursor: pointer; white-space: nowrap;
+                transition: background .15s var(--ease), text-shadow .15s var(--ease); }
+  .cmd button:hover { background: rgba(255,255,255,0.14); text-shadow: 0 0 10px rgba(255,255,255,.5); }
+  .cmd button.copied { color: #9af5bf; }
+
+  ol, ul { margin: 0 0 12px 22px; }
+  li { margin: 5px 0; }
+  .note { border-left: 2px solid var(--line); padding: 6px 0 6px 14px; color: var(--dim);
+          font-size: 13.5px; margin: 16px 0; }
+  details { margin: 10px 0; border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; color: var(--dim); font-size: 14px; }
+  summary:hover { color: #fff; }
+  a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { text-shadow: 0 0 10px rgba(255,255,255,.5); }
+  .os-tag { display: inline-block; font-size: 11.5px; color: var(--dim); border: 1px solid var(--line);
+            border-radius: 3px; padding: 2px 8px; margin-left: 6px; vertical-align: middle;
+            letter-spacing: 0.5px; text-transform: none; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
+           color: var(--dim); font-size: 12.5px; }
+
+  @media (max-width: 600px) {
+    header { max-width: 100%; }
+    .logo-area { position: static; margin-bottom: 18px; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-area"><canvas id="logo-canvas"></canvas></div>
+
+  <header>
+    <h1>text-ani</h1>
+    <div class="sub">Animate text in your browser → export ProRes 4444 with a real alpha channel.</div>
+  </header>
+
+  <section id="mac">
+    <h2>Install on macOS <span class="os-tag" id="osTag">detecting…</span></h2>
+    <p class="dim">Paste this one line into <strong>Terminal</strong> and press Return. It sets everything up and opens the app.</p>
+    <div class="cmd">
+      <code id="oneliner">curl -fsSL https://raw.githubusercontent.com/ff-ch/text-ani/main/install.sh | bash</code>
+      <button id="copyBtn" type="button">Copy</button>
+    </div>
+    <p class="dim" style="margin-top:16px">It will:</p>
+    <ol class="dim">
+      <li>install <strong>Homebrew</strong> if you don't have it (it may ask for your Mac password),</li>
+      <li>install <strong>ffmpeg</strong> and <strong>Node.js</strong>,</li>
+      <li>download text-ani to <code>~/text-ani</code>, and</li>
+      <li>launch it in your browser.</li>
+    </ol>
+    <div class="note">No “unidentified developer” prompt — you're running a script you can read, not opening a downloaded app. The full script is <a href="https://github.com/ff-ch/text-ani/blob/main/install.sh" target="_blank" rel="noopener">on GitHub</a> if you'd like to check it first.</div>
+    <p class="dim">To open Terminal: press <strong>⌘&nbsp;Space</strong>, type “Terminal”, press Return.</p>
+  </section>
+
+  <details id="winlinux">
+    <summary>On Windows or Linux?</summary>
+    <div style="margin-top:14px">
+      <p class="dim"><strong>Linux</strong> — install Node.js and ffmpeg with your package manager, then:</p>
+      <div class="cmd">
+        <code>git clone https://github.com/ff-ch/text-ani &amp;&amp; cd text-ani &amp;&amp; npm install &amp;&amp; npm start</code>
+        <button class="copyMini" type="button">Copy</button>
+      </div>
+      <p class="dim" style="margin-top:16px"><strong>Windows</strong> — install <a href="https://nodejs.org" target="_blank" rel="noopener">Node.js</a> and <a href="https://www.gyan.dev/ffmpeg/builds/" target="_blank" rel="noopener">ffmpeg</a> (add ffmpeg to your PATH), then in the project folder run <code>npm install</code> and <code>npm start</code>, and open <code>http://localhost:4444</code>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Prefer to do it by hand?</summary>
+    <div style="margin-top:14px">
+      <ol class="dim">
+        <li>Install <a href="https://brew.sh" target="_blank" rel="noopener">Homebrew</a>, then run <code>brew install node ffmpeg</code></li>
+        <li><code>git clone https://github.com/ff-ch/text-ani</code></li>
+        <li><code>cd text-ani &amp;&amp; npm install &amp;&amp; npm start</code></li>
+        <li>Open <code>http://localhost:4444</code></li>
+      </ol>
+    </div>
+  </details>
+
+  <footer>
+    <a href="https://github.com/ff-ch/text-ani" target="_blank" rel="noopener">github.com/ff-ch/text-ani</a> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; fforde.ch
+  </footer>
+</div>
+
+<script>
+/* ── Brand logo: pixel wordmark "fforde ✛ ch" with a spinning cross ──
+   Ported verbatim from fforde.ch (5×7 bitmap font, animated separator),
+   rendered smaller and placed top-right. */
+(function () {
+  var font = {
+    f:[[0,0,1,1,0],[0,1,0,0,0],[1,1,1,1,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0],[0,1,0,0,0]],
+    o:[[0,0,0,0,0],[0,0,0,0,0],[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+    r:[[0,0,0,0,0],[0,0,0,0,0],[1,0,1,1,0],[1,1,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+    d:[[0,0,0,0,1],[0,0,0,0,1],[0,1,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,1,1],[0,1,1,0,1]],
+    e:[[0,0,0,0,0],[0,0,0,0,0],[0,1,1,1,0],[1,0,0,0,1],[1,1,1,1,1],[1,0,0,0,0],[0,1,1,1,0]],
+    c:[[0,0,0,0,0],[0,0,0,0,0],[0,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[0,1,1,1,0]],
+    h:[[1,0,0,0,0],[1,0,0,0,0],[1,0,1,1,0],[1,1,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]]
+  };
+  var W1 = ['f','f','o','r','d','e'], W2 = ['c','h'];
+  var LW = 5, LH = 7, LG = 1, DG = 3, DS = 3;
+  var TW = (W1.length*LW + (W1.length-1)*LG) + DG + DS + DG + (W2.length*LW + (W2.length-1)*LG);
+  var TH = LH;
+  var px = 3;                          // small (the site uses up to 5)
+  var COL = '#E8E8E8';
+  var cv = document.getElementById('logo-canvas'), ctx = cv.getContext('2d');
+  cv.width = TW*px; cv.height = TH*px;
+  cv.style.width = (TW*px)+'px'; cv.style.height = (TH*px)+'px';
+  var spin = 0;
+  function drawChar(ch, ox, oy) {
+    var g = font[ch]; if (!g) return;
+    for (var r=0;r<LH;r++) for (var c=0;c<LW;c++) if (g[r][c]) ctx.fillRect((ox+c)*px,(oy+r)*px,px,px);
+  }
+  function draw() {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.fillStyle = COL;
+    var x = 0, i;
+    for (i=0;i<W1.length;i++){ drawChar(W1[i], x, 0); x += LW+LG; }
+    var dotX=(x-LG+DG+DS/2)*px, dotY=(TH/2+1)*px, u=px;
+    ctx.save(); ctx.translate(dotX,dotY); ctx.rotate(spin); ctx.beginPath();
+    ctx.moveTo(-u/2,-u/2-u); ctx.lineTo(u/2,-u/2-u); ctx.lineTo(u/2,-u/2);
+    ctx.lineTo(u/2+u,-u/2); ctx.lineTo(u/2+u,u/2); ctx.lineTo(u/2,u/2);
+    ctx.lineTo(u/2,u/2+u); ctx.lineTo(-u/2,u/2+u); ctx.lineTo(-u/2,u/2);
+    ctx.lineTo(-u/2-u,u/2); ctx.lineTo(-u/2-u,-u/2); ctx.lineTo(-u/2,-u/2);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+    var x2=x-LG+DG+DS+DG, j;
+    for (j=0;j<W2.length;j++){ drawChar(W2[j], x2, 0); x2 += LW+LG; }
+    spin += 0.025;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── OS detection ── */
+(function () {
+  var ua = navigator.userAgent || '';
+  var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var isMac = /Mac/i.test(plat) || /Mac OS X/i.test(ua);
+  var isWin = /Win/i.test(plat) || /Windows/i.test(ua);
+  var tag = document.getElementById('osTag');
+  if (isMac) { tag.textContent = 'macOS detected'; }
+  else if (isWin) { tag.textContent = 'Windows detected — see below'; var d = document.getElementById('winlinux'); if (d) d.open = true; }
+  else { tag.textContent = 'see Windows / Linux below'; }
+})();
+
+/* ── Copy buttons (work on file:// too via a textarea fallback) ── */
+function copyText(text, btn) {
+  function done() {
+    var t = btn.textContent;
+    btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+    setTimeout(function () { btn.textContent = t; btn.classList.remove('copied'); }, 1600);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text, done); });
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, cb) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta); if (cb) cb();
+}
+document.getElementById('copyBtn').addEventListener('click', function () {
+  copyText(document.getElementById('oneliner').textContent, this);
+});
+[].forEach.call(document.querySelectorAll('.copyMini'), function (b) {
+  b.addEventListener('click', function () { copyText(this.previousElementSibling.textContent, this); });
+});
+</script>
+</body>
+</html>
