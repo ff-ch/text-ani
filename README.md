@@ -33,3 +33,7 @@ ProRes 4444 can only be written by **ffmpeg**, a local program — browsers can'
 npm start
 # then open http://localhost:4444
 ```
+
+## License
+
+[MIT](LICENSE) © ff-ch
