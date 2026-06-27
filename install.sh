@@ -13,7 +13,6 @@
 set -euo pipefail
 
 REPO="ff-ch/text-ani"
-APP_DIR="$HOME/text-ani"
 TARBALL="https://github.com/$REPO/archive/refs/heads/main.tar.gz"
 
 # --- pretty output (colours only when writing to a real terminal) -----------
@@ -33,6 +32,18 @@ printf "\n  %stext-ani installer%s\n  %sanimate text → export ProRes 4444 with
 if [ "$(uname -s)" != "Darwin" ]; then
   die "This installer is for macOS. On Linux: install node + ffmpeg with your package manager, then 'git clone https://github.com/$REPO && cd text-ani && npm install && npm start'."
 fi
+
+# --- where to install -------------------------------------------------------
+# Pop a native "choose folder" window so the user decides where it goes (this
+# works even when the script is run via `curl | bash`). Falls back to
+# ~/Documents/text-ani if there's no desktop session or the user cancels.
+PARENT=""
+if command -v osascript >/dev/null 2>&1; then
+  PARENT="$(osascript -e 'POSIX path of (choose folder with prompt "Choose a folder to install text-ani into:" default location (path to documents folder))' 2>/dev/null)" || PARENT=""
+fi
+[ -n "$PARENT" ] || PARENT="$HOME/Documents"
+APP_DIR="${PARENT%/}/text-ani"
+say "Installing into: $APP_DIR"
 
 # --- Homebrew ---------------------------------------------------------------
 if ! command -v brew >/dev/null 2>&1; then
